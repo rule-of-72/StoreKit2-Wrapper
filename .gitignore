@@ -1,0 +1,51 @@
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+._*
+
+
+# External disks
+.Spotlight-V100
+.Trashes/
+
+
+# Remote file shares
+.AppleDB
+.AppleDesktop
+Network Trash Folder/
+Temporary Items/
+.apdisk
+
+
+# Xcode
+.xcodesamplecode.plist
+xcuserdata/
+project.xcworkspace/
+swiftpm/
+.swiftpm/
+Package.resolved
+
+
+# 3rd party libraries
+Pods/
+Carthage/Checkouts
+Carthage/Build
+.bundle/
+
+
+# AppCode 
+review_board_plugin*.*
+
+
+# GitHub Pages
+_site
+.sass-cache
+Gemfile*
