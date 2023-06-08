@@ -30,9 +30,9 @@ Code that uses `Store` needs to provide an array of product identifiers and an i
 
 ### Product Identifiers
 
-Your host code must provide a catalog of known product identifiers as an array of Strings, just as if you were using StoreKit 2 directly.
+Your host code must provide a catalog of known product identifiers. This is an array of Strings, just as if you were using StoreKit 2 directly.
 
-The final set of products made available for purchase are the intersection of this catalog and the list of active products on App Store Connect at the time the app is running. See [`Product.products(for:)`](https://developer.apple.com/documentation/storekit/product/3851116-products) for details.
+At runtime, the final set of products made available for purchase is the intersection of this array and the list of active products on App Store Connect. See [`Product.products(for:)`](https://developer.apple.com/documentation/storekit/product/3851116-products) for details.
 
 ### Callback Model
 
@@ -48,13 +48,13 @@ func storeDidReportPurchasePending(_: Store, productID: String)
 
 Your implementation of `storeDidUpdatePurchasedProducts()` should read the `store.purchasedProducts` property to get the updated list of purchases. 
 
-As with all delegate-based callback models, there must be a single host that receives the delegate calls. You can either provide that host yourself, or you can use the `StoreManager` class, which hosts `Store` with its own delegate implementation.
+As with all delegate-based callback models, there must be a single object that receives the delegate calls. You can either provide that receiver object yourself, or you can use the `StoreManager` class, which hosts `Store` with its own delegate implementation.
 
 ## StoreManager
 
 The `StoreManager` class places another layer of abstraction between your code and the underlying IAP store.
 
-Code that uses `StoreManager` needs to provide an enum of product identifiers and to observe notifications.
+Code that uses `StoreManager` needs to provide an `enum` of product identifiers and needs to observe Notification Center notifications.
 
 ### The Store Manager says: Open for Business!
 
@@ -129,11 +129,11 @@ private var iapObserver: NSObjectProtocol? = nil
 
 ## Limitations
 
-This code was developed to support [non-consumable](https://developer.apple.com/documentation/storekit/product/producttype/3749424-nonconsumable) In-App Purchases only.
+This code was developed to support [non-consumable](https://developer.apple.com/documentation/storekit/product/producttype/3749424-nonconsumable) In-App Purchases.
 
-It may or may not work with other [product types](https://developer.apple.com/documentation/storekit/product/producttype), and has not been tested in those use cases.
+It _may_ or _may not_ work with other [product types](https://developer.apple.com/documentation/storekit/product/producttype), and has not been tested in those use cases.
 
-Pull request submissions will be considered if changes are required to support other types of IAPs.
+If changes are required to support other types of IAPs, please submit a pull request.
 
 ## Reading
 
