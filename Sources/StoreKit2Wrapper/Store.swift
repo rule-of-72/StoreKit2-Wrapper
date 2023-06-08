@@ -149,6 +149,7 @@ public class Store {
                 continue
             }
 
+            print("\t• \(product.displayName)")
             purchasedProducts.append(product)
         }
 
