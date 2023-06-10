@@ -46,25 +46,22 @@ func storeDidReportPurchasePending(_: Store, productID: String)
 
 `Store` calls these methods whenever a StoreKit `await` call returns.
 
-Your implementation of `storeDidUpdatePurchasedProducts()` should read the `store.purchasedProducts` property to get the updated list of purchases. 
-
 As with all delegate-based callback models, there must be a single object that receives the delegate calls. You can either provide that receiver object yourself, or you can use the `StoreManager` class, which hosts `Store` with its own delegate implementation.
+
+### Purchased products
+
+Your implementation of `storeDidUpdatePurchasedProducts()` should read one of the following properties to get the updated list of products that the user has purchased:
+
+- `store.purchasedProducts` — provides more detailed information about the purchased products, but _may_ or _may not_ work if the device is offline.
+
+- `store.purchasedProductIdentifiers`  — works offline using StoreKit’s cached list of identifiers, so your users have access to their purchased products in Airplane Mode.
+
 
 ## StoreManager
 
 The `StoreManager` class places another layer of abstraction between your code and the underlying IAP store.
 
 Code that uses `StoreManager` needs to provide an `enum` of product identifiers and needs to observe Notification Center notifications.
-
-### The Store Manager says: Open for Business!
-
-Remember that the underlying StoreKit code is asynchronous. It has to connect to the App Store and download the list of products and transactions before it can be considered fully initialized.
-
-`StoreManager` exposes a property, `openForBusiness`, that indicates whether initialization has completed.
-
-Do not try to make any purchases or query any product’s purchase status until this property becomes `true`. Otherwise, StoreKit won’t have the information needed to complete the request. Debug builds assert this requirement.
-
-This property is not observable using KVO or Combine. Instead, wait for the first broadcast of `StoreManager.updatedPurchasesNotification`, which indicates that the store is open for business.
 
 ### Product Identifiers
 
@@ -81,6 +78,29 @@ enum MyAppProduct: String, CaseIterable {
 typealias MyAppStoreManager = StoreManager<MyAppProduct>
 let storeManager = MyAppStoreManager()
 ```
+
+### Properties
+#### openForBusiness
+
+Remember that the underlying StoreKit code is asynchronous. It has to connect to the App Store and download the list of products and transactions before it can be considered fully initialized.
+
+`StoreManager` exposes a property, `openForBusiness`, that indicates whether initialization has completed.
+
+Do not try to make any purchases or query any product’s purchase status until `openForBusiness` becomes `true`. Otherwise, StoreKit won’t have the information needed to complete the request. Debug builds assert this requirement.
+
+This property is not observable using KVO or Combine. Instead, wait for the first broadcast of `StoreManager.updatedPurchasesNotification`, which indicates that the store is open for business.
+
+#### shelvesStocked
+
+The `shelvesStocked` property indicates whether the Store has any products available. This may be `false` if the device is offline or if your App Store Connect account has no In-App Purchase products defined.
+
+Use this property as a hint for hiding your shopping cart icon or other store UI if there isn’t anything for the user to purchase.
+
+Note: even if `shelvesStocked` is false, the user may have purchased products in the past. You should still check whether `purchaseStatus(for:)` returns `.hasPurchased` when deciding whether to unlock the relevant functionality at runtime.
+
+#### canMakePurchases
+
+The `canMakePurchases` property indicates whether the user is restricted from making purchases on the App Store. This may be the result of parental controls or a managed-device policy. See the StoreKit documentation for more information.
 
 ### Callback Model
 

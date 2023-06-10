@@ -27,6 +27,10 @@ public class StoreManager<ProductID: CaseIterable & RawRepresentable & Hashable>
         return Store.canMakePurchases
     }
 
+    public var shelvesStocked: Bool {
+        return store.availableProducts.count > 0
+    }
+
     public init() {
         let productIdentifiers = ProductID.allCases.map { $0.rawValue }
         store = Store(productIdentifiers: productIdentifiers, delegate: self)
@@ -47,11 +51,13 @@ public class StoreManager<ProductID: CaseIterable & RawRepresentable & Hashable>
     public func purchaseStatus(for product: ProductID) -> PurchaseStatus {
         assert(openForBusiness, "IAP StoreManager: Do not call purchaseStatus() until the Store is open for business.")
 
-        guard canMakePurchases else {
-            return .notAvailable
+        var purchaseStatus = status[product] ?? .notAvailable
+
+        if purchaseStatus == .canPurchase && !canMakePurchases {
+            purchaseStatus = .notAvailable
         }
 
-        return purchased[product] ?? .notAvailable
+        return purchaseStatus
     }
 
     public func purchase(_ productID: ProductID) {
@@ -74,7 +80,7 @@ public class StoreManager<ProductID: CaseIterable & RawRepresentable & Hashable>
     
     // MARK: - Private properties
 
-    private var purchased: [ProductID : PurchaseStatus] = [:]
+    private var status: [ProductID : PurchaseStatus] = [:]
     private var store: Store! = nil
     private let notificationCenter = NotificationCenter.default
 
@@ -84,16 +90,16 @@ public class StoreManager<ProductID: CaseIterable & RawRepresentable & Hashable>
 extension StoreManager: StoreDelegate {
 
     public func storeDidUpdatePurchasedProducts(_ store: Store) {
-        purchased = [:]
+        status = [:]
 
         for product in store.availableProducts {
             guard let productID = ProductID(rawValue: product.id) else { continue }
-            purchased[productID] = .canPurchase
+            status[productID] = .canPurchase
         }
 
-        for product in store.purchasedProducts {
-            guard let productID = ProductID(rawValue: product.id) else { continue }
-            purchased[productID] = .hasPurchased
+        for identifier in store.purchasedProductIdentifiers {
+            guard let productID = ProductID(rawValue: identifier) else { continue }
+            status[productID] = .hasPurchased
         }
 
         openForBusiness = true
@@ -114,7 +120,7 @@ extension StoreManager: StoreDelegate {
     public func storeDidReportPurchasePending(_: Store, productID: String) {
         guard let productID = ProductID(rawValue: productID) else { return }
 
-        purchased[productID] = .purchasePending
+        status[productID] = .purchasePending
 
         let userInfo: [String : Any] = [
             productIDKeyName : productID

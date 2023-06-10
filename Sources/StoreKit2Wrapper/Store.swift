@@ -19,7 +19,11 @@ public class Store {
 
     public weak var delegate: StoreDelegate? = nil
     public private(set) var availableProducts: [Product] = []
-    public private(set) var purchasedProducts: [Product] = []
+    public private(set) var purchasedProductIdentifiers: [String] = []
+
+    public var purchasedProducts: [Product] {
+        purchasedProductIdentifiers.compactMap { productID in availableProducts.first(where: { $0.id == productID } ) }
+    }
 
     public static var canMakePurchases: Bool {
         return AppStore.canMakePayments
@@ -139,21 +143,25 @@ public class Store {
             await transaction.finish()
         }
 
-        var purchasedProducts: [Product] = []
+        var purchasedProductIdentifiers: [String] = []
 
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result,
-                  transaction.revocationDate == nil,
-                  let product = availableProducts.first(where: { $0.id == transaction.productID } )
+                  transaction.revocationDate == nil
             else {
                 continue
             }
 
-            print("\t• \(product.displayName)")
-            purchasedProducts.append(product)
+            if let product = availableProducts.first(where: { $0.id == transaction.productID } ) {
+                print("\t• \(product.displayName)")
+            } else {
+                print("\t• Product \(transaction.productID)")
+            }
+
+            purchasedProductIdentifiers.append(transaction.productID)
         }
 
-        self.purchasedProducts = purchasedProducts
+        self.purchasedProductIdentifiers = purchasedProductIdentifiers
 
         print("IAP Store: Finished refreshing purchased products; calling update handler.")
         delegate?.storeDidUpdatePurchasedProducts(self)
